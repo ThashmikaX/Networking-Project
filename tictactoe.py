@@ -18,7 +18,7 @@ def initial_state():
             [EMPTY, EMPTY, EMPTY]]
 
 
-def player(board ,user):
+def player(board):
     """
     Returns player who has the next turn on a board.
     """
@@ -30,11 +30,11 @@ def player(board ,user):
         return user 
     
     if count_O > count_X:
-        player == "X"
+        player = "X"
     elif count_X > count_O:
-        player == "O"
+        player = "O"
     else:
-        player == user
+        player = user
 
     return player
 
@@ -89,10 +89,12 @@ def calc_items(board):
     count_X, count_O = 0, 0
 
     for i in board:
-        if i == "X":
-            count_X += 1
-        elif i == "O":
-            count_O += 1
+        for j in i:
+            if j == X:
+                count_X += 1
+            elif j == O:
+                count_O += 1
+
     
     return (count_X, count_O)
 
