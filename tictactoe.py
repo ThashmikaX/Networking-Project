@@ -23,20 +23,20 @@ def player(board):
     Returns player who has the next turn on a board.
     """
 
-    count_X , count_O = calc_items(board)
-    player = None
+    x_count = 0
+    o_count = 0
 
-    if board == initial_state():
-        return user 
-    
-    if count_O > count_X:
-        player = "X"
-    elif count_X > count_O:
-        player = "O"
+    for row in board:
+        for cell in row:
+            if cell == X:
+                x_count += 1
+            elif cell == O:
+                o_count += 1
+
+    if x_count > o_count:
+        return O
     else:
-        player = user
-
-    return player
+        return X
 
 
 
@@ -128,7 +128,30 @@ def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    raise NotImplementedError
+
+    if terminal(board):
+        return None
+
+    current_player = player(board)
+
+    if current_player == X:
+        v = -math.inf
+        best_move = None
+        for action in actions(board):
+            min_value = min_val(result(board, action))
+            if min_value > v:
+                v = min_value
+                best_move = action
+    else:
+        v = math.inf
+        best_move = None
+        for action in actions(board):
+            max_value = max_val(result(board, action))
+            if max_value < v:
+                v = max_value
+                best_move = action
+
+    return best_move
 
 def calc_items(board):
     """
@@ -146,4 +169,32 @@ def calc_items(board):
 
     
     return (count_X, count_O)
+
+
+
+def min_val(board):
+    """
+    return the minimum value that can get from the current board
+
+    """
+    if terminal(board):
+        return utility(board)
+    
+    v = math.inf
+    for action in actions(board):
+        v = min(v, max_val(result(board, action)))
+    return v
+
+def max_val(board):
+    """
+    return the maximum value that can get from the current board
+    """
+    
+    if terminal(board):
+        return utility(board)
+    
+    v = -math.inf
+    for action in actions(board):
+        v = max(v, min_val(result(board, action)))
+    return v
 
