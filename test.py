@@ -6,7 +6,7 @@ EMPTY = None
 
 board = [[O, X, X],
         [X, X, O],
-        [O, O, X]]
+        [O, O, O]]
 
 #print(ttt.calc_items(board))
 
@@ -19,3 +19,5 @@ board = [[O, X, X],
 print(ttt.winner(board))
 
 print(ttt.terminal(board))
+
+print(ttt.utility(board))
