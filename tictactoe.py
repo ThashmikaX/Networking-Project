@@ -39,19 +39,18 @@ def player(board):
         return X
 
 
-
 def actions(board):
     """
     Returns set of all possible actions (i, j) available on the board.
     """
 
-    actions = []
+    result = set()
     for i in range(3):
         for j in range(3):
             if board[i][j] == EMPTY:
-                actions.append((i, j))
+                result.add((i, j))
 
-    return actions
+    return result
 
 
 def result(board, action):
@@ -60,6 +59,12 @@ def result(board, action):
     """
 
     i, j = action
+
+    if i < 0 or i > 2 or j < 0 or j > 2:
+        raise ValueError("Invalid action.")
+    if board[i][j] != EMPTY:
+        raise ValueError("Invalid action. Cell is not empty.")
+    
     current_player = player(board)
 
     if board[i][j] != EMPTY:
@@ -153,6 +158,7 @@ def minimax(board):
 
     return best_move
 
+
 def calc_items(board):
     """
     Retun the X and O count in the board at this instance
@@ -167,9 +173,7 @@ def calc_items(board):
             elif j == O:
                 count_O += 1
 
-    
     return (count_X, count_O)
-
 
 
 def min_val(board):
@@ -184,6 +188,7 @@ def min_val(board):
     for action in actions(board):
         v = min(v, max_val(result(board, action)))
     return v
+
 
 def max_val(board):
     """
