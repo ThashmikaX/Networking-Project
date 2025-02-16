@@ -3,6 +3,8 @@ Tic Tac Toe Player
 """
 
 import math
+import threading
+import queue
 
 X = "X"
 O = "O"
@@ -203,3 +205,50 @@ def max_val(board):
         v = max(v, min_val(result(board, action)))
     return v
 
+def threaded_minimax(board):
+    """
+    Returns the optimal action for the current player on the board using threading
+    for parallel evaluation of possible moves.
+    """
+    if terminal(board):
+        return None
+
+    current_player = player(board)
+    possible_actions = actions(board)
+    
+    # Use a queue to collect results from threads
+    result_queue = queue.Queue()
+    threads = []
+    
+    def evaluate_move(action):
+        new_board = result(board, action)
+        if current_player == X:
+            value = min_val(new_board)
+        else:
+            value = max_val(new_board)
+        result_queue.put((action, value))
+    
+    # Start a thread for each possible move
+    for action in possible_actions:
+        thread = threading.Thread(target=evaluate_move, args=(action,))
+        threads.append(thread)
+        thread.start()
+    
+    # Wait for all threads to complete
+    for thread in threads:
+        thread.join()
+    
+    # Find the best move from the results
+    best_action = None
+    best_value = -math.inf if current_player == X else math.inf
+    
+    while not result_queue.empty():
+        action, value = result_queue.get()
+        if current_player == X and value > best_value:
+            best_value = value
+            best_action = action
+        elif current_player == O and value < best_value:
+            best_value = value
+            best_action = action
+    
+    return best_action
