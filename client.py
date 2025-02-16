@@ -35,7 +35,7 @@ opponent_disconnected = False
 # Network message queue
 message_queue = []
 
-def connect_to_server(host='127.0.0.1', port=65432):
+def connect_to_server(host='192.168.22.71', port=8000):
     """Connect to the game server"""
     global client_socket
     try:
@@ -73,26 +73,54 @@ def join_game(game_to_join):
 
 def listen_for_messages():
     """Background thread to listen for server messages"""
-    global board, network_turn, message_queue, client_socket
+    global board, network_turn, message_queue, client_socket, waiting_for_opponent, opponent_disconnected
     while client_socket:
         try:
             data = client_socket.recv(1024)
             if not data:
                 break
                 
-            message = data.decode('utf-8')
-            
-            # Handle binary board data specially
-            if message.startswith("board_update:"):
-                try:
-                    _, board_data_str = message.split(":", 1)
-                    board_data = pickle.loads(eval(board_data_str))
-                    message = "board_updated"
-                    board = board_data
-                except Exception as e:
-                    print(f"Error unpickling board: {e}")
-            
-            message_queue.append(message)
+            try:
+                message = data.decode('utf-8')
+                
+                # Handle board update message
+                if message.startswith("board_update:"):
+                    # Extract the data length
+                    _, length_str = message.split(':', 1)
+                    data_length = int(length_str)
+                    
+                    # Now receive the actual board data
+                    board_data = b''
+                    remaining = data_length
+                    
+                    while remaining > 0:
+                        chunk = client_socket.recv(min(1024, remaining))
+                        if not chunk:
+                            raise ConnectionError("Connection closed while receiving board data")
+                        board_data += chunk
+                        remaining -= len(chunk)
+                    
+                    # Unpickle the board data
+                    try:
+                        board = pickle.loads(board_data)
+                        message_queue.append("board_updated")
+                    except Exception as e:
+                        print(f"Error unpickling board: {e}")
+                
+                elif message == "opponent_joined":
+                    waiting_for_opponent = False
+                    message_queue.append(message)
+                
+                elif message == "opponent_disconnected":
+                    opponent_disconnected = True
+                    message_queue.append(message)
+                
+                elif message.startswith("game_over:") or message.startswith("error:"):
+                    message_queue.append(message)
+                
+            except UnicodeDecodeError:
+                # If we get here, it might be binary data that we failed to decode
+                print("Received binary data that couldn't be decoded as UTF-8")
             
         except Exception as e:
             print(f"Error receiving message: {e}")
